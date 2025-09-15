@@ -1,31 +1,32 @@
 package dev.sisby.switchy.mixin;
 
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import dev.sisby.switchy.Switchy;
 import dev.sisby.switchy.data.SwitchyPlayerData;
+import dev.sisby.switchy.duck.SwitchyPlayHandler;
 import dev.sisby.switchy.duck.SwitchyPlayer;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.storage.NbtWriteView;
-import net.minecraft.storage.ReadView;
-import net.minecraft.storage.WriteView;
 import net.minecraft.text.Text;
-import net.minecraft.util.ErrorReporter;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ServerPlayerEntity.class)
 public class PlayerMixin implements SwitchyPlayer {
+	@Unique
 	private SwitchyPlayerData switchy$playerData = null;
+	@Unique
 	private NbtCompound switchy$hotSwap = null;
 
 	@Override
 	public void switchy$hotSwap(NbtCompound nbt, Text reason) {
 		ServerPlayerEntity self = (ServerPlayerEntity) (Object) this;
 		switchy$hotSwap = nbt;
-		ServerPlayNetworking.reconfigure(self.networkHandler);
+		((SwitchyPlayHandler) self.networkHandler).switchy$hotSwap();
 	}
 
 	@Override
@@ -35,39 +36,45 @@ public class PlayerMixin implements SwitchyPlayer {
 		return switchy$playerData;
 	}
 
-	@Inject(method = "readCustomData", at = @At("TAIL"))
-	public void readPlayerData(ReadView view, CallbackInfo ci) {
+	@Inject(method = "readCustomDataFromNbt", at = @At("TAIL"))
+	public void readPlayerData(NbtCompound nbt, CallbackInfo ci) {
 		ServerPlayerEntity self = (ServerPlayerEntity) (Object) this;
-		switchy$playerData = view.read(Switchy.ID, SwitchyPlayerData.CODEC).orElseGet(() -> SwitchyPlayerData.create(self));
-		switchy$playerData.init(self, view);
+		if (nbt.contains(Switchy.ID)) {
+			switchy$playerData = SwitchyPlayerData.CODEC.parse(NbtOps.INSTANCE, nbt.getCompound(Switchy.ID).get()).mapOrElse(s -> s, e -> SwitchyPlayerData.create(self));
+			switchy$playerData.init(self, nbt);
+		}
 	}
 
-	@Inject(method = "writeCustomData", at = @At("HEAD"), cancellable = true)
-	public void applyHotSwapData(WriteView view, CallbackInfo ci) {
+	@Inject(method = "writeCustomDataToNbt", at = @At("HEAD"), cancellable = true)
+	public void applyHotSwapData(NbtCompound nbt, CallbackInfo ci) {
 		ServerPlayerEntity self = (ServerPlayerEntity) (Object) this;
-		if (switchy$hotSwap != null && view instanceof NbtWriteView nbtView) {
+		if (switchy$hotSwap != null) {
 			if (self.getServer().isHost(self.getGameProfile())) { // hosts don't support reconfiguration unless we patch this
-				self.getServer().getSaveProperties().getPlayerData().entrySet().clear();
+				self.getServer().getSaveProperties().getPlayerData().getKeys().clear();
 				self.getServer().getSaveProperties().getPlayerData().copyFrom(switchy$hotSwap);
-				NbtWriteView writeView = NbtWriteView.create(new ErrorReporter.Logging(self.getErrorReporterContext(), Switchy.LOGGER), self.getRegistryManager());
-				writePlayerData(writeView, ci);
-				self.getServer().getSaveProperties().getPlayerData().copyFrom(writeView.getNbt());
+				writePlayerData(self.getServer().getSaveProperties().getPlayerData(), ci);
 			}
-			nbtView.getNbt().copyFrom(switchy$hotSwap);
-			writePlayerData(view, ci);
+			nbt.copyFrom(switchy$hotSwap);
+			writePlayerData(nbt, ci);
 			ci.cancel();
 		}
 	}
 
-	@Inject(method = "writeCustomData", at = @At("TAIL"))
-	public void writePlayerData(WriteView view, CallbackInfo ci) {
+	@Inject(method = "writeCustomDataToNbt", at = @At("TAIL"))
+	public void writePlayerData(NbtCompound nbt, CallbackInfo ci) {
 		if (switchy$playerData != null && switchy$playerData.size() > 1) {
-			view.put(Switchy.ID, SwitchyPlayerData.CODEC, switchy$playerData);
+			nbt.put(Switchy.ID, SwitchyPlayerData.CODEC.encodeStart(NbtOps.INSTANCE, switchy$playerData).getOrThrow());
 		}
 	}
 
 	@Inject(method = "copyFrom", at = @At("TAIL"))
 	public void copyPlayerData(ServerPlayerEntity oldPlayer, boolean alive, CallbackInfo ci) {
 		switchy$playerData = ((PlayerMixin) (Object) oldPlayer).switchy$playerData;
+	}
+
+	@ModifyReturnValue(method = "acceptsMessage", at = @At("RETURN"))
+	private boolean dontSendMessagesDuringHotswap(boolean original) {
+		ServerPlayerEntity self = (ServerPlayerEntity) (Object) this;
+		return original && !((SwitchyPlayHandler) self.networkHandler).switchy$isHotSwap();
 	}
 }

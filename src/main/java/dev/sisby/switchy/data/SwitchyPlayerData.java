@@ -16,11 +16,7 @@ import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.storage.NbtReadView;
-import net.minecraft.storage.NbtWriteView;
-import net.minecraft.storage.ReadView;
 import net.minecraft.text.Text;
-import net.minecraft.util.ErrorReporter;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.dynamic.Codecs;
 
@@ -36,23 +32,27 @@ import java.util.stream.Collectors;
 public class SwitchyPlayerData {
 	public static final Codec<SwitchyPlayerData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 		Codec.STRING.fieldOf("current").forGetter(SwitchyPlayerData::current),
+		Codec.STRING.fieldOf("previous").forGetter(SwitchyPlayerData::previous),
 		SwitchyCodecs.COMPONENT_TYPE_SET_CODEC.fieldOf("componentTypes").forGetter(p -> p.componentTypes),
 		Codec.dispatchedMap(Codecs.NON_EMPTY_STRING, SwitchyProfile::codec).fieldOf("profiles").xmap(a -> (Map<String, SwitchyProfile>) new HashMap<>(a), b -> b).forGetter(p -> p.profiles)
 	).apply(instance, SwitchyPlayerData::new));
 
 	public static final PacketCodec<RegistryByteBuf, SwitchyPlayerData> PACKET_CODEC = PacketCodec.tuple(
 		PacketCodecs.STRING, SwitchyPlayerData::current,
+		PacketCodecs.STRING, SwitchyPlayerData::previous,
 		PacketCodecs.collection(LinkedHashSet::new, SwitchyComponentTypes.instance().packetCodec()), p -> p.componentTypes,
 		SwitchyCodecs.packetDispatchedMap(HashMap::new, PacketCodecs.STRING, SwitchyProfile::packetCodec), p -> p.profiles,
 		SwitchyPlayerData::new
 	);
 
 	private String current;
+	private String previous;
 	private final Set<SwitchyComponentType<?>> componentTypes;
 	private final Map<String, SwitchyProfile> profiles;
 
-	public SwitchyPlayerData(String current, Set<SwitchyComponentType<?>> componentTypes, Map<String, SwitchyProfile> profiles) {
+	public SwitchyPlayerData(String current, String previous, Set<SwitchyComponentType<?>> componentTypes, Map<String, SwitchyProfile> profiles) {
 		this.current = current;
+		this.previous = previous;
 		this.componentTypes = componentTypes;
 		this.profiles = profiles;
 	}
@@ -64,6 +64,7 @@ public class SwitchyPlayerData {
 	public static SwitchyPlayerData create(ServerPlayerEntity player) {
 		SwitchyPlayerData data = new SwitchyPlayerData(
 			"default",
+			"",
 			new LinkedHashSet<>(SwitchyComponentTypes.instance().values()),
 			new LinkedHashMap<>()
 		);
@@ -95,11 +96,15 @@ public class SwitchyPlayerData {
 		return current;
 	}
 
+	public String previous() {
+		return previous;
+	}
+
 	public SwitchyProfile getProfile(String profileId) {
 		return profiles.get(profileId);
 	}
 
-	public void init(ServerPlayerEntity player, ReadView nbt) {
+	public void init(ServerPlayerEntity player, NbtCompound nbt) {
 		for (SwitchyComponentType<?> componentType : Sets.difference(SwitchyComponentTypes.instance().values(), componentTypes)) {
 			try {
 				componentType.tryInitialize(profiles.values().stream().map(SwitchyProfile::components).toList(), nbt, player);
@@ -113,12 +118,12 @@ public class SwitchyPlayerData {
 
 	public SwitchyProfile getOrCreateProfile(String profileId, ServerPlayerEntity player) {
 		if (profileExists(profileId)) return profiles.get(profileId);
-		NbtWriteView view = NbtWriteView.create(new ErrorReporter.Logging(player.getErrorReporterContext(), Switchy.LOGGER), player.getRegistryManager());
-		player.writeData(view);
+		NbtCompound nbt = new NbtCompound();
+		player.writeNbt(nbt);
 		SwitchyComponentMap components = SwitchyComponentMap.empty();
 		for (SwitchyComponentType<?> componentType : componentTypes) {
 			try {
-				componentType.tryInitialize(List.of(components), NbtReadView.create(new ErrorReporter.Logging(player.getErrorReporterContext(), Switchy.LOGGER), player.getRegistryManager(), view.getNbt()), player);
+				componentType.tryInitialize(List.of(components), nbt, player);
 			} catch (Exception e) {
 				Switchy.LOGGER.warn("Failed to initialize {} for {} profile {}", componentType.id(), player.getGameProfile().getName(), profileId, e);
 			}
@@ -129,14 +134,14 @@ public class SwitchyPlayerData {
 	}
 
 	private NbtCompound updateFromPlayer(SwitchyProfile profile, ServerPlayerEntity player) {
-		NbtWriteView view = NbtWriteView.create(new ErrorReporter.Logging(player.getErrorReporterContext(), Switchy.LOGGER), player.getRegistryManager());
-		player.writeData(view);
+		NbtCompound nbt = new NbtCompound();
+		player.writeNbt(nbt);
 		for (SwitchyComponentType<?> componentType : componentTypes) {
 			if (componentType.nbtReader() != null) {
-				profile.components().set(componentType, componentType.nbtReader().read(view.getNbt()));
+				profile.components().set(componentType, componentType.nbtReader().read(nbt));
 			}
 		}
-		return view.getNbt();
+		return nbt;
 	}
 
 	public void updateCurrent(ServerPlayerEntity player) {
@@ -170,6 +175,7 @@ public class SwitchyPlayerData {
 			componentType.tryMutate(nextProfile.components(), playerNbt);
 		}
 
+		previous = current;
 		current = nextProfile.id();
 
 		((SwitchyPlayer) player).switchy$hotSwap(playerNbt, SwitchyCommands.prefix()
@@ -182,5 +188,9 @@ public class SwitchyPlayerData {
 	public SwitchyProfile switchOrCreateProfile(String profileId, ServerPlayerEntity player) {
 		switchProfile(getOrCreateProfile(profileId.toLowerCase(), player), player);
 		return getCurrentProfile();
+	}
+
+	public void clearPrevious() {
+		previous = "";
 	}
 }

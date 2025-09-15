@@ -59,6 +59,7 @@ publishing {
 			url "https://repo-api.sleeping.town/"
 			credentials(PasswordCredentials)
 		}
+		mavenLocal()
 	}
 	publications {
 		mavenJava(MavenPublication) {
