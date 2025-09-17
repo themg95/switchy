@@ -20,7 +20,6 @@ import folk.sisby.switchy.packet.S2CExportPresets;
 import folk.sisby.switchy.packet.S2CPreviewPresets;
 import folk.sisby.switchy.packet.S2CSwitchEvent;
 import folk.sisby.switchy.presets.SwitchyPresetsImpl;
-import folk.sisby.switchy.util.Feedback;
 import folk.sisby.switchy.util.PresetConverter;
 import folk.sisby.switchy.util.SwitchyCommand;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
@@ -37,6 +36,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import static folk.sisby.switchy.api.module.SwitchyModuleRegistry.getEditable;
@@ -133,14 +133,14 @@ public class SwitchyClientServerNetworking {
 
 	private static void sendPresets(int listener, ServerPlayerEntity player, SwitchyPresets presets, SwitchyFeedback feedback, @Nullable NbtCompound nbt) {
 		if (nbt != null) {
-			NbtList excludes = nbt.getList(KEY_IMPORT_EXCLUDE, NbtElement.STRING_TYPE);
+			NbtList excludes = nbt.getList(KEY_IMPORT_EXCLUDE).orElseGet(NbtList::new);
 			if (excludes.isEmpty()) {
 				ServerPlayNetworking.send(player, new S2CExportPresets(listener, feedback.toNbt(player), presets.toNbt()));
 			} else {
 				SwitchyPresets exportPresets = new SwitchyPresetsImpl(false);
 				exportPresets.fillFromNbt(presets.toNbt());
 				excludes.forEach(e -> {
-					Identifier id = Identifier.tryParse(e.asString());
+					Identifier id = Identifier.tryParse(e.asString().orElseGet(String::new));
 					if (id != null && exportPresets.containsModule(id) && exportPresets.isModuleEnabled(id))
 						exportPresets.disableModule(id);
 				});
@@ -163,7 +163,7 @@ public class SwitchyClientServerNetworking {
 
 		// Parse Preset NBT //
 
-		if (presetNbt == null || !presetNbt.contains(KEY_IMPORT_COMMAND, NbtElement.STRING_TYPE)) {
+		if (presetNbt == null || !presetNbt.contains(KEY_IMPORT_COMMAND)) {
 			feedback.accept(invalid("commands.switchy_client.import.fail.parse"));
 			return SwitchyFeedbackStatus.INVALID;
 		}
@@ -182,8 +182,8 @@ public class SwitchyClientServerNetworking {
 		List<Identifier> excludeModules;
 		List<Identifier> includeModules;
 		try {
-			excludeModules = presetNbt.getList(KEY_IMPORT_EXCLUDE, NbtElement.STRING_TYPE).stream().map(NbtElement::asString).map(Identifier::tryParse).toList();
-			includeModules = presetNbt.getList(KEY_IMPORT_INCLUDE, NbtElement.STRING_TYPE).stream().map(NbtElement::asString).map(Identifier::tryParse).toList();
+			excludeModules = presetNbt.getList(KEY_IMPORT_EXCLUDE).stream().map(NbtElement::asString).flatMap(Optional::stream).map(Identifier::tryParse).toList();
+			includeModules = presetNbt.getList(KEY_IMPORT_INCLUDE).stream().map(NbtElement::asString).flatMap(Optional::stream).map(Identifier::tryParse).toList();
 		} catch (InvalidIdentifierException e) {
 			feedback.accept(invalid("commands.switchy_client.import.fail.parse"));
 			return SwitchyFeedbackStatus.FAIL;
@@ -200,7 +200,7 @@ public class SwitchyClientServerNetworking {
 			}
 		});
 
-		String command = presetNbt.getString(KEY_IMPORT_COMMAND);
+		String command = presetNbt.getString(KEY_IMPORT_COMMAND).orElseGet(String::new);
 
 		return SwitchyApi.confirmAndImportPresets(player, importedPresets.getPresets(), importedPresets.getEnabledModules(), command, feedback);
 	}

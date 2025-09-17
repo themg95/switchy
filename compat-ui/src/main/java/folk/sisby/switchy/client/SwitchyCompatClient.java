@@ -2,7 +2,6 @@ package folk.sisby.switchy.client;
 
 import folk.sisby.switchy.client.api.SwitchyClientEvents;
 import folk.sisby.switchy.client.modules.FabricTailorClientModule;
-import folk.sisby.switchy.client.modules.OriginsClientModule;
 import folk.sisby.switchy.client.modules.StyledNicknamesClientModule;
 import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
@@ -31,7 +30,6 @@ public class SwitchyCompatClient implements SwitchyClientEvents.Init {
 		if (FabricLoader.getInstance().isModLoaded("owo")) {
 			FabricTailorClientModule.register();
 			StyledNicknamesClientModule.register();
-			if (FabricLoader.getInstance().isModLoaded("origins")) OriginsClientModule.register();
 			LOGGER.info("[Switchy Compat UI] Initialized!");
 		}
 	}

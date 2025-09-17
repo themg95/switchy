@@ -19,11 +19,7 @@ import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 import static folk.sisby.switchy.util.Feedback.getIdListText;
 
@@ -81,19 +77,19 @@ public abstract class SwitchyPresetsDataImpl<Module extends SwitchySerializable,
 
 	@Override
 	public void fillFromNbt(NbtCompound nbt) {
-		toggleModulesFromNbt(nbt.getList(KEY_PRESET_MODULE_ENABLED, NbtElement.STRING_TYPE), true, !forPlayer);
-		toggleModulesFromNbt(nbt.getList(KEY_PRESET_MODULE_DISABLED, NbtElement.STRING_TYPE), false, !forPlayer);
+		toggleModulesFromNbt(nbt.getList(KEY_PRESET_MODULE_ENABLED).orElseGet(NbtList::new), true, !forPlayer);
+		toggleModulesFromNbt(nbt.getList(KEY_PRESET_MODULE_DISABLED).orElseGet(NbtList::new), false, !forPlayer);
 		if (!forPlayer) { // Disable non-enabled modules by default for non-player presets.
-			List<Identifier> enabledModules = nbt.getList(KEY_PRESET_MODULE_ENABLED, NbtElement.STRING_TYPE).stream().map(NbtElement::asString).map(Identifier::tryParse).toList();
+			List<Identifier> enabledModules = nbt.getList(KEY_PRESET_MODULE_ENABLED).stream().map(NbtElement::asString).flatMap(Optional::stream).map(Identifier::tryParse).toList();
 			modules.forEach((id, enabled) -> modules.put(id, enabledModules.contains(id)));
 		}
 
-		NbtCompound configCompound = nbt.getCompound(KEY_MODULE_CONFIGS);
+		NbtCompound configCompound = nbt.getCompound(KEY_MODULE_CONFIGS).orElseGet(NbtCompound::new);
 		for (String key : configCompound.getKeys()) {
 			try {
 				SwitchySerializable config = setConfig(Feedback.identifier(key));
 				if (config != null) {
-					config.fillFromNbt(configCompound.getCompound(key));
+					config.fillFromNbt(configCompound.getCompound(key).orElseGet(NbtCompound::new));
 				}
 			} catch (InvalidIdentifierException ignoredInvalidIdentifier) {
 				logger.warn("[Switchy] Player data contained invalid module config '{}'. Data may have been lost.", key);
@@ -105,10 +101,10 @@ public abstract class SwitchyPresetsDataImpl<Module extends SwitchySerializable,
 		}
 		getEnabledModules().stream().filter(key -> !moduleConfigs.containsKey(key)).forEach(this::setConfig);
 
-		NbtCompound presetsCompound = nbt.getCompound(KEY_PRESETS);
+		NbtCompound presetsCompound = nbt.getCompound(KEY_PRESETS).orElseGet(NbtCompound::new);
 		for (String key : presetsCompound.getKeys()) {
 			try {
-				newPreset(key).fillFromNbt(presetsCompound.getCompound(key));
+				newPreset(key).fillFromNbt(presetsCompound.getCompound(key).orElseGet(NbtCompound::new));
 			} catch (IllegalStateException ignoredPresetExists) {
 				logger.warn("[Switchy] Player data contained duplicate preset '{}'. Data may have been lost.", key);
 			} catch (InvalidWordException ignored) {
@@ -118,7 +114,7 @@ public abstract class SwitchyPresetsDataImpl<Module extends SwitchySerializable,
 
 		if (forPlayer) {
 			if (nbt.contains(KEY_PRESET_CURRENT)) try {
-				setCurrentPreset(nbt.getString(KEY_PRESET_CURRENT));
+				setCurrentPreset(nbt.getString(KEY_PRESET_CURRENT).orElseGet(String::new));
 			} catch (PresetNotFoundException ignored) {
 				logger.warn("[Switchy] Unable to set current preset from data. Data may have been lost.");
 			}
@@ -183,7 +179,7 @@ public abstract class SwitchyPresetsDataImpl<Module extends SwitchySerializable,
 	void toggleModulesFromNbt(NbtList list, Boolean enabled, Boolean silent) {
 		list.forEach((e) -> {
 			Identifier id;
-			if ((id = Identifier.tryParse(e.asString())) != null && modules.containsKey(id)) {
+			if ((id = Identifier.tryParse(e.asString().orElseGet(String::new))) != null && modules.containsKey(id)) {
 				modules.put(id, enabled);
 			} else if (!silent) {
 				logger.warn("[Switchy] Unable to toggle a module - Was a module unloaded?");

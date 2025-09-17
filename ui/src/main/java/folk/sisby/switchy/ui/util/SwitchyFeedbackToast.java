@@ -35,6 +35,7 @@ public class SwitchyFeedbackToast implements Toast {
 	private final TextRenderer textRenderer;
 	private final int duration;
 	private final int width;
+	private Visibility visibility;
 
 	private SwitchyFeedbackToast(SwitchyFeedback feedback, int duration) {
 		this.duration = duration;
@@ -65,7 +66,17 @@ public class SwitchyFeedbackToast implements Toast {
 	}
 
 	@Override
-	public Visibility draw(DrawContext context, ToastManager manager, long startTime) {
+	public Visibility getVisibility() {
+		return this.visibility;
+	}
+
+	@Override
+	public void update(ToastManager manager, long time) {
+		this.visibility = time > duration ? Visibility.HIDE : Visibility.SHOW;
+	}
+
+	@Override
+	public void draw(DrawContext context, TextRenderer textRenderer, long startTime) {
 		context.fill(0, 0, getWidth(), getHeight(), 0x77000000);
 		outline(context, 0, 0, getWidth(), getHeight(), colours.get(status));
 
@@ -76,7 +87,6 @@ public class SwitchyFeedbackToast implements Toast {
 			context.drawText(textRenderer, textLines.get(i), 4, 4 + i * 11, 0xFFFFFF, false);
 		}
 
-		return startTime > duration ? Visibility.HIDE : Visibility.SHOW;
 	}
 
 	@Override

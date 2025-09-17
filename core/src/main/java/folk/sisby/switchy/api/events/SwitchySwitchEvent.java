@@ -7,6 +7,7 @@ import net.minecraft.nbt.NbtString;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -35,7 +36,7 @@ public record SwitchySwitchEvent(UUID player, @Nullable String currentPreset, @N
 	 * @return an event constructed from the NBT.
 	 */
 	public static SwitchySwitchEvent fromNbt(NbtCompound nbt) {
-		return new SwitchySwitchEvent(nbt.getUuid(KEY_PLAYER), nbt.contains(KEY_CURRENT_PRESET, NbtElement.STRING_TYPE) ? nbt.getString(KEY_CURRENT_PRESET) : null, nbt.contains(KEY_PREVIOUS_PRESET, NbtElement.STRING_TYPE) ? nbt.getString(KEY_PREVIOUS_PRESET) : null, nbt.getList(KEY_ENABLED_MODULES, NbtElement.STRING_TYPE).stream().map(NbtElement::asString).toList());
+		return new SwitchySwitchEvent(UUID.fromString(nbt.getString(KEY_PLAYER).orElse("")), nbt.contains(KEY_CURRENT_PRESET) ? nbt.getString(KEY_CURRENT_PRESET).toString() : null, nbt.contains(KEY_PREVIOUS_PRESET) ? nbt.getString(KEY_PREVIOUS_PRESET).toString() : null, nbt.getList(KEY_ENABLED_MODULES).stream().map(NbtElement::asString).flatMap(Optional::stream).toList());
 	}
 
 	/**
@@ -45,7 +46,7 @@ public record SwitchySwitchEvent(UUID player, @Nullable String currentPreset, @N
 	 */
 	public NbtCompound toNbt() {
 		NbtCompound nbt = new NbtCompound();
-		nbt.putUuid(KEY_PLAYER, player);
+		nbt.putString(KEY_PLAYER, player.toString());
 		if (currentPreset != null) nbt.putString(KEY_CURRENT_PRESET, currentPreset);
 		NbtList nbtModules = new NbtList();
 		nbtModules.addAll(enabledModules.stream().map(NbtString::of).toList());

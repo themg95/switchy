@@ -14,7 +14,6 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
 import net.minecraft.network.packet.s2c.play.EntityEquipmentUpdateS2CPacket;
@@ -107,9 +106,9 @@ public class FabricationArmorModule implements SwitchyModule {
 	@Override
 	public void fillFromNbt(NbtCompound nbt) {
 		suppressedSlots = EnumSet.noneOf(EquipmentSlot.class);
-		NbtList nbtList = nbt.getList(KEY_SUPPRESSED_SLOTS, NbtElement.STRING_TYPE);
+		NbtList nbtList = nbt.getList(KEY_SUPPRESSED_SLOTS).orElseGet(NbtList::new);
 		for (int i = 0; i < nbtList.size(); i++) {
-			EquipmentSlot slot = Enums.getIfPresent(EquipmentSlot.class, nbtList.getString(i).toUpperCase(Locale.ROOT)).orNull();
+			EquipmentSlot slot = Enums.getIfPresent(EquipmentSlot.class, nbtList.getString(i).orElseGet(String::new).toUpperCase(Locale.ROOT)).orNull();
 			if (slot == null) {
 				SwitchyCompat.LOGGER.warn("[Switchy Compat] Unrecognized slot {} while loading profile", nbtList.getString(i));
 			} else {

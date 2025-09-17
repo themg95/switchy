@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
 import folk.sisby.switchy.client.api.module.SwitchyClientModuleRegistry;
 import folk.sisby.switchy.client.api.modules.CardinalSerializerClientModule;
@@ -17,6 +18,7 @@ import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.resource.JsonDataLoader;
+import net.minecraft.resource.ResourceFinder;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.profiler.Profiler;
@@ -55,7 +57,7 @@ public class CardinalClientModuleLoader extends JsonDataLoader implements Identi
 	private static final NbtPathArgumentType pathAtg = NbtPathArgumentType.nbtPath();
 
 	CardinalClientModuleLoader(Gson gson) {
-		super(gson, "switchy_cardinal");
+		super(Codec.STRING, ResourceFinder.json("switchy_cardinal"));
 	}
 
 	private static void accept(Identifier moduleId, JsonElement contents) {
@@ -138,7 +140,8 @@ public class CardinalClientModuleLoader extends JsonDataLoader implements Identi
 	}
 
 	@Override
-	protected void apply(Map<Identifier, JsonElement> prepared, ResourceManager manager, Profiler profiler) {
+	protected void apply(Object rawPrepared, ResourceManager manager, Profiler profiler) {
+		var prepared = (Map<Identifier, JsonElement>) rawPrepared;
 		prepared.forEach(CardinalClientModuleLoader::accept);
 		SwitchyCardinalClient.LOGGER.info("[Switchy Cardinal UI] Finished reloading {} modules!", prepared.size());
 	}

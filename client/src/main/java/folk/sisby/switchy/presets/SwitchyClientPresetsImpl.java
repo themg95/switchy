@@ -60,7 +60,7 @@ public class SwitchyClientPresetsImpl extends SwitchyPresetsDataImpl<SwitchyClie
 		// Don't Log. Don't check for existence. `modules` is expected to be desync'd from the actual modules.
 		list.forEach((e) -> {
 			Identifier id;
-			if ((id = Identifier.tryParse(e.asString())) != null) {
+			if ((id = Identifier.tryParse(e.asString().orElseGet(String::new))) != null) {
 				getModules().put(id, enabled);
 			}
 		});
@@ -78,8 +78,8 @@ public class SwitchyClientPresetsImpl extends SwitchyPresetsDataImpl<SwitchyClie
 	@Override
 	public void fillFromNbt(NbtCompound nbt) {
 		super.fillFromNbt(nbt);
-		moduleInfo.putAll(SwitchyModuleRegistry.infoFromNbt(nbt.getCompound(PresetConverter.KEY_MODULE_INFO)));
-		permissionLevel = nbt.getInt(PresetConverter.KEY_PERMISSION_LEVEL);
+		moduleInfo.putAll(SwitchyModuleRegistry.infoFromNbt(nbt.getCompound(PresetConverter.KEY_MODULE_INFO).orElseGet(NbtCompound::new)));
+		permissionLevel = nbt.getInt(PresetConverter.KEY_PERMISSION_LEVEL).orElse(0);
 	}
 
 	@Override

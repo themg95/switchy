@@ -61,14 +61,14 @@ public class SwitchyPresetDataImpl<Module extends SwitchySerializable> implement
 		nbt.getKeys().forEach(key -> {
 			if (Identifier.tryParse(key) != null && !modules.containsKey(Identifier.tryParse(key))) { // Lost Puppy
 				Switchy.LOGGER.warn("[Switchy] Saving lost puppy {} - {}. Reinstall the module and then disable it to fully clear the data.", name, key);
-				backup.put(Identifier.tryParse(key), nbt.getCompound(key));
+				backup.put(Identifier.tryParse(key), nbt.getCompound(key).orElseGet(NbtCompound::new));
 			}
 		});
 	}
 
 	@Override
 	public void fillFromNbt(NbtCompound nbt) {
-		modules.forEach((id, module) -> module.fillFromNbt(nbt.getCompound(id.toString())));
+		modules.forEach((id, module) -> module.fillFromNbt(nbt.getCompound(id.toString()).orElseGet(NbtCompound::new)));
 		savePuppies(nbt);
 	}
 

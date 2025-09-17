@@ -90,14 +90,14 @@ public class StyledNicknamesModule implements SwitchyModule, SwitchyModuleTransf
 	public NbtCompound toClientNbt() {
 		NbtCompound outNbt = new NbtCompound();
 		if (styled_nickname != null) {
-			outNbt.put(KEY_NICKNAME, TextCodecs.STRINGIFIED_CODEC.encodeStart(NbtOps.INSTANCE, getText()).getOrThrow());
+			outNbt.put(KEY_NICKNAME, TextCodecs.CODEC.encodeStart(NbtOps.INSTANCE, getText()).getOrThrow());
 		}
 		return outNbt;
 	}
 
 	@Override
 	public void fillFromNbt(NbtCompound nbt) {
-		styled_nickname = nbt.contains(KEY_NICKNAME) ? nbt.getString(KEY_NICKNAME) : null;
+		styled_nickname = nbt.contains(KEY_NICKNAME) ? nbt.getString(KEY_NICKNAME).orElseGet(String::new) : null;
 	}
 
 	/**

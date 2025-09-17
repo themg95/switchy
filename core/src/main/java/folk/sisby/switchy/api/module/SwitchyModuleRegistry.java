@@ -236,7 +236,7 @@ public class SwitchyModuleRegistry {
 	 */
 	public static Map<Identifier, SwitchyModuleInfo> infoFromNbt(NbtCompound nbt) {
 		Map<Identifier, SwitchyModuleInfo> outMap = new HashMap<>();
-		nbt.getKeys().forEach(key -> outMap.put(Identifier.tryParse(key), SwitchyModuleInfo.fromNbt(nbt.getCompound(key))));
+		nbt.getKeys().forEach(key -> outMap.put(Identifier.tryParse(key), SwitchyModuleInfo.fromNbt(nbt.getCompound(key).orElseGet(NbtCompound::new))));
 		return outMap;
 	}
 

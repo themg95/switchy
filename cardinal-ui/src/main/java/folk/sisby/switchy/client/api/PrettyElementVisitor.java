@@ -28,14 +28,12 @@ public class PrettyElementVisitor extends NbtTextFormatter implements NbtElement
 	@Override
 	public void visitString(NbtString element) {
 		try {
-			this.result = TextCodecs.STRINGIFIED_CODEC.decode(NbtOps.INSTANCE, element).getOrThrow().getFirst().copy().formatted(Formatting.GREEN);
+			this.result = TextCodecs.CODEC.decode(NbtOps.INSTANCE, element).getOrThrow().getFirst().copy().formatted(Formatting.GREEN);
 			return;
 		} catch (Exception ignored) {
 		}
-		Registries.ITEM.getOrEmpty(Identifier.tryParse(element.asString())).ifPresentOrElse(
-			i -> this.result = Feedback.translatable(i.getTranslationKey()).formatted(Formatting.AQUA),
-			() -> this.result = Feedback.literal(element.asString()).formatted(Formatting.GREEN)
-		);
+		var i = Registries.ITEM.get(Identifier.tryParse(element.asString().orElseGet(String::new)));
+		this.result = Feedback.translatable(i.getTranslationKey()).formatted(Formatting.AQUA);
 	}
 
 	@Override

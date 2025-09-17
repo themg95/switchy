@@ -34,8 +34,7 @@
 	},
 	"suggests": {
 		"styled-nicknames": ">=${styledNicknames}",
-		"fabrictailor": ">=${fabrictailor}",
-		"origins": ">=${origins}"
+		"fabrictailor": ">=${fabrictailor}"
 	},
 	"entrypoints": {
 		"switchy_client": [

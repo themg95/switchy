@@ -16,6 +16,7 @@ allprojects {
 	archivesBaseName = project == rootProject ? slug : "${slug}-${project.name}"
 
 	repositories {
+		mavenLocal()
 		maven { url "https://maven.fabricmc.net/" }
 
 		maven { url "https://repo.sleeping.town/" }
@@ -83,10 +84,7 @@ allprojects {
 			cardinal             : libs.versions.cardinal.get(),
 			styledNicknames      : libs.versions.styledNicknames.get(),
 			fabrictailor         : libs.versions.fabrictailor.get(),
-			origins              : libs.versions.origins.get().replaceFirst("v", ""),
-			pehkui               : libs.versions.pehkui.get(),
 			fabrication          : libs.versions.fabrication.get(),
-			figura               : libs.versions.figura.get(),
 		]
 		inputs.properties(meta)
 		filesMatching("*.mod.json") { expand(meta) }
@@ -122,6 +120,7 @@ allprojects {
 
 	publishing {
 		repositories {
+			mavenLocal()
 			maven {
 				name "SleepingTown"
 				url "https://repo-api.sleeping.town/"
@@ -185,9 +184,6 @@ modrinth {
 		optional.version libs.owo.get().getName(), libs.versions.owo.get()
 		optional.version libs.styledNicknames.get().getName(), libs.versions.styledNicknames.get()
 		optional.version libs.fabrictailor.get().getName(), libs.versions.fabrictailor.get()
-		optional.version libs.origins.get().getName().replace("-fabric", ""), "1.13.0-alpha.12+mc.1.21.1"
-		optional.project libs.pehkui.get().getName()
-		optional.project libs.figura.get().getName()
 	}
 }
 

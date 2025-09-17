@@ -20,6 +20,7 @@ import net.minecraft.item.Items;
 import net.minecraft.item.tooltip.BundleTooltipData;
 import net.minecraft.nbt.NbtByte;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
@@ -90,7 +91,7 @@ public class CardinalSerializerClientModule extends CardinalSerializerData imple
 				try {
 					v.get(nbt).forEach(e1 -> {
 						if (e1 instanceof NbtCompound c1) {
-							c1.getList("Items", 10).forEach(e2 -> {
+							c1.getList("Items").orElseGet(NbtList::new).forEach(e2 -> {
 								ItemStack stack = ItemStack.CODEC.decode(NbtOps.INSTANCE, e2).getOrThrow().getFirst();
 								if (!stack.isEmpty()) items.add(stack);
 							});

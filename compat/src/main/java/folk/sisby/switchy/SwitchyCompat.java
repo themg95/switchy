@@ -1,11 +1,8 @@
 package folk.sisby.switchy;
 
 import folk.sisby.switchy.api.SwitchyEvents;
-import folk.sisby.switchy.modules.ApoliModule;
 import folk.sisby.switchy.modules.FabricTailorModule;
 import folk.sisby.switchy.modules.FabricationArmorModule;
-import folk.sisby.switchy.modules.OriginsModule;
-import folk.sisby.switchy.modules.PehkuiModule;
 import folk.sisby.switchy.modules.StyledNicknamesModule;
 import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
@@ -33,9 +30,6 @@ public class SwitchyCompat implements SwitchyEvents.Init {
 	public void onInitialize() {
 		if (FabricLoader.getInstance().isModLoaded("styled-nicknames")) StyledNicknamesModule.register();
 		if (FabricLoader.getInstance().isModLoaded("fabrictailor")) FabricTailorModule.register();
-		if (FabricLoader.getInstance().isModLoaded("origins")) OriginsModule.register();
-		if (FabricLoader.getInstance().isModLoaded("apoli") && !FabricLoader.getInstance().isModLoaded("connector")) ApoliModule.register();
-		if (FabricLoader.getInstance().isModLoaded("pehkui")) PehkuiModule.register();
 		if (FabricLoader.getInstance().isModLoaded("fabrication")) FabricationArmorModule.register();
 		LOGGER.info("[Switchy Compat] Initialized!");
 	}

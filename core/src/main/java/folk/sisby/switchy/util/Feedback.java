@@ -122,7 +122,7 @@ public class Feedback {
 		return literal("[").append(Texts.join(
 			identifiers,
 			literal(", "),
-			id -> literal(id.getPath()).setStyle(Style.EMPTY.withHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_TEXT, literal(id.toString()))))
+			id -> literal(id.getPath()).setStyle(Style.EMPTY.withHoverEvent(new HoverEvent.ShowText(literal(id.toString()))))
 		)).append(literal("]"));
 	}
 

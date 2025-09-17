@@ -15,6 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -71,7 +72,7 @@ public class IdentifiersFromNbtArgArgumentType implements ArgumentType<List<Iden
 			List<Identifier> idArgs = context.getArgument(excludeArgument, List.class);
 			excludeIds.addAll(idArgs.stream().map(Identifier::toString).toList());
 		}
-		List<String> suggestions = nbt.getList(nbtListKey, NbtElement.STRING_TYPE).stream().map(NbtElement::asString).filter(s -> !excludeIds.contains(s)).toList();
+		List<String> suggestions = nbt.getList(nbtListKey).stream().map(NbtElement::asString).flatMap(Optional::stream).filter(s -> !excludeIds.contains(s)).toList();
 		CommandSource.suggestMatching(suggestions, builder);
 		try {
 			List<String> usedIds = identifiersArgumentType.parse(new StringReader(builder.getRemaining())).stream().map(Identifier::toString).toList();

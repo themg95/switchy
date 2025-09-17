@@ -51,7 +51,7 @@ public class FabricTailorModuleData implements SwitchySerializable {
 
 	@Override
 	public void fillFromNbt(NbtCompound nbt) {
-		skinValue = nbt.contains(KEY_SKIN_VALUE) ? nbt.getString(KEY_SKIN_VALUE) : null;
-		skinSignature = nbt.contains(KEY_SKIN_SIGNATURE) ? nbt.getString(KEY_SKIN_SIGNATURE) : null;
+		skinValue = nbt.contains(KEY_SKIN_VALUE) ? nbt.getString(KEY_SKIN_VALUE).orElseGet(String::new) : null;
+		skinSignature = nbt.contains(KEY_SKIN_SIGNATURE) ? nbt.getString(KEY_SKIN_SIGNATURE).orElseGet(String::new) : null;
 	}
 }

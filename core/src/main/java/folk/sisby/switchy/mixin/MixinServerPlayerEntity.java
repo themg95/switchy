@@ -35,7 +35,7 @@ public abstract class MixinServerPlayerEntity implements SwitchyPlayer {
 	@Inject(at = @At("TAIL"), method = "readCustomDataFromNbt(Lnet/minecraft/nbt/NbtCompound;)V")
 	private void readCustomDataFromNbt(NbtCompound tag, CallbackInfo ci) {
 		SwitchyPresets presets = new SwitchyPresetsImpl(true);
-		presets.fillFromNbt(tag.getCompound("switchy:presets"));
+		presets.fillFromNbt(tag.getCompound("switchy:presets").orElseGet(NbtCompound::new));
 		switchy$switchyPresets = presets;
 	}
 

@@ -14,7 +14,7 @@ import net.minecraft.network.packet.CustomPayload;
  */
 public record C2SImportPresets(int listener, boolean confirm, NbtCompound presetsNbt) implements CustomPayload {
 	public static Id<C2SImportPresets> ID = new Id<>(Feedback.identifier(Switchy.ID, "c2s_presets_import"));
-	public static PacketCodec<PacketByteBuf, C2SImportPresets> CODEC = PacketCodec.tuple(PacketCodecs.VAR_INT, C2SImportPresets::listener, PacketCodecs.BOOL, C2SImportPresets::confirm, PacketCodecs.NBT_COMPOUND, C2SImportPresets::presetsNbt, C2SImportPresets::new);
+	public static PacketCodec<PacketByteBuf, C2SImportPresets> CODEC = PacketCodec.tuple(PacketCodecs.VAR_INT, C2SImportPresets::listener, PacketCodecs.BOOLEAN, C2SImportPresets::confirm, PacketCodecs.NBT_COMPOUND, C2SImportPresets::presetsNbt, C2SImportPresets::new);
 
 	@Override
 	public Id<? extends CustomPayload> getId() {

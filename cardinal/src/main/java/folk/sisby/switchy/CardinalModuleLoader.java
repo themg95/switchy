@@ -3,6 +3,7 @@ package folk.sisby.switchy;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.mojang.serialization.Codec;
 import folk.sisby.switchy.api.module.SwitchyModule;
 import folk.sisby.switchy.api.module.SwitchyModuleEditable;
 import folk.sisby.switchy.api.module.SwitchyModuleInfo;
@@ -12,6 +13,7 @@ import folk.sisby.switchy.util.Feedback;
 import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.resource.JsonDataLoader;
+import net.minecraft.resource.ResourceFinder;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.profiler.Profiler;
@@ -51,11 +53,12 @@ public class CardinalModuleLoader extends JsonDataLoader implements Identifiable
 	private static final String KEY_COMPONENTS = "components";
 
 	CardinalModuleLoader(Gson gson) {
-		super(gson, "switchy_cardinal");
+		super(Codec.STRING, ResourceFinder.json("switchy_cardinal"));
 	}
 
 	@Override
-	protected void apply(Map<Identifier, JsonElement> prepared, ResourceManager manager, Profiler profiler) {
+	protected void apply(Object rawPrepared, ResourceManager manager, Profiler profiler) {
+		var prepared = (Map<Identifier, JsonElement>) rawPrepared;
 		prepared.forEach((moduleId, contents) -> {
 			if (SwitchyModuleRegistry.containsModule(moduleId)) {
 				return;

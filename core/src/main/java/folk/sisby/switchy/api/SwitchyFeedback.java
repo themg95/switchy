@@ -1,5 +1,6 @@
 package folk.sisby.switchy.api;
 
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -35,10 +36,20 @@ public record SwitchyFeedback(SwitchyFeedbackStatus status, Collection<Text> mes
 	 */
 	public static SwitchyFeedback fromNbt(NbtCompound nbt) {
 		List<Text> msgs = new ArrayList<>();
-		nbt.getList(KEY_MESSAGES_LIST, NbtElement.STRING_TYPE).stream().map(n -> TextCodecs.CODEC.decode(NbtOps.INSTANCE, n).getOrThrow().getFirst()).forEach(msgs::add);
-		return new SwitchyFeedback(SwitchyFeedbackStatus.valueOf(nbt.getString(KEY_STATUS)), msgs);
-	}
+		NbtList list = nbt.getList(KEY_MESSAGES_LIST).get();
 
+		for (NbtElement elem : list) {
+			TextCodecs.CODEC.decode(NbtOps.INSTANCE, elem)
+				.result()
+				.map(Pair::getFirst)
+				.ifPresent(msgs::add);  // only add if decoding worked
+		}
+
+		return new SwitchyFeedback(
+			SwitchyFeedbackStatus.valueOf(nbt.getString(KEY_STATUS).get()),
+			msgs
+		);
+	}
 	/**
 	 * Serialize the object to NBT.
 	 *

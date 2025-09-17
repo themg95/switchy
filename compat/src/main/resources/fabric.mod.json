@@ -35,17 +35,11 @@
 	"suggests": {
 		"styled-nicknames": ">=${styledNicknames}",
 		"fabrictailor": ">=${fabrictailor}",
-		"origins": ">=${origins}",
-		"pehkui": ">=${pehkui}",
-		"fabrication": ">=${fabrication}",
-		"figura": ">=${figura}"
+		"fabrication": ">=${fabrication}"
 	},
 	"entrypoints": {
 		"switchy": [
 			"folk.sisby.switchy.SwitchyCompat"
-		],
-		"figura_event": [
-			"folk.sisby.switchy.client.SwitchyFiguraEvents"
 		]
 	}
 }

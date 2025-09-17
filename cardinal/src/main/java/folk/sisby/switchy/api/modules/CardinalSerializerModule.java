@@ -90,7 +90,7 @@ public class CardinalSerializerModule extends CardinalSerializerData implements 
 	public void applyToPlayer(ServerPlayerEntity player) {
 		componentConfigs.forEach((id, componentConfig) -> {
 			componentConfig.invokePreApplyClear(player);
-			componentConfig.registryKey.get(player).readFromNbt(moduleNbt.getCompound(id.toString()), player.getServer().getRegistryManager());
+			componentConfig.registryKey.get(player).readFromNbt(moduleNbt.getCompound(id.toString()).orElseGet(NbtCompound::new), player.getServer().getRegistryManager());
 			componentConfig.invokePostApplySync(player);
 			componentConfig.registryKey.sync(player);
 		});

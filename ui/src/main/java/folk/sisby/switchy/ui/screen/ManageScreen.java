@@ -40,11 +40,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -382,9 +378,9 @@ public class ManageScreen extends BaseOwoScreen<LockableFlowLayout> implements S
 			}, cancelButton -> {
 			}, List.of(
 				Feedback.translatable("screen.switchy.manage.data.import.info",
-					Feedback.literal(String.valueOf(selectedFileNbt.getCompound(SwitchyPresetsData.KEY_PRESETS).getKeys().size())),
+					Feedback.literal(String.valueOf(selectedFileNbt.getCompound(SwitchyPresetsData.KEY_PRESETS).orElseGet(NbtCompound::new).getKeys().size())),
 					Feedback.literal(String.valueOf(includedModules.size()))), Feedback.translatable("screen.switchy.manage.dialog.presets",
-					Feedback.getHighlightedListText(selectedFileNbt.getCompound(SwitchyPresetsData.KEY_PRESETS).getKeys().stream().sorted().toList(), List.of(new Pair<>(presets.getPresetNames()::contains, Formatting.DARK_RED)))),
+					Feedback.getHighlightedListText(selectedFileNbt.getCompound(SwitchyPresetsData.KEY_PRESETS).orElseGet(NbtCompound::new).getKeys().stream().sorted().toList(), List.of(new Pair<>(presets.getPresetNames()::contains, Formatting.DARK_RED)))),
 				Feedback.translatable("screen.switchy.manage.data.import.collision"),
 				Feedback.translatable("screen.switchy.manage.dialog.modules", Feedback.getIdListText(includedModules))
 			)));
@@ -393,12 +389,12 @@ public class ManageScreen extends BaseOwoScreen<LockableFlowLayout> implements S
 		@Override
 		protected void onNbtSourceChange(NbtCompound selected) {
 			super.onNbtSourceChange(selected);
-			includedModules = selected.getList(SwitchyPresetsData.KEY_PRESET_MODULE_ENABLED, NbtElement.STRING_TYPE).stream().map(NbtElement::asString).map(Identifier::tryParse).filter(id -> {
+			includedModules = selected.getList(SwitchyPresetsData.KEY_PRESET_MODULE_ENABLED).stream().map(NbtElement::asString).flatMap(Optional::stream).map(Identifier::tryParse).filter(id -> {
 				SwitchyModuleInfo moduleInfo = presets.getModuleInfo().get(id);
 				if (moduleInfo == null) return false;
 				return moduleInfo.editable() == SwitchyModuleEditable.ALLOWED || moduleInfo.editable() == SwitchyModuleEditable.ALWAYS_ALLOWED;
 			}).collect(Collectors.toList());
-			availableModules = selected.getList(SwitchyPresetsData.KEY_PRESET_MODULE_ENABLED, NbtElement.STRING_TYPE).stream().map(NbtElement::asString).map(Identifier::tryParse).filter(id -> {
+			availableModules = selected.getList(SwitchyPresetsData.KEY_PRESET_MODULE_ENABLED).stream().map(NbtElement::asString).flatMap(Optional::stream).map(Identifier::tryParse).filter(id -> {
 				SwitchyModuleInfo moduleInfo = presets.getModuleInfo().get(id);
 				if (moduleInfo == null) return true;
 				return moduleInfo.editable() == SwitchyModuleEditable.OPERATOR || moduleInfo.editable() == SwitchyModuleEditable.NEVER;

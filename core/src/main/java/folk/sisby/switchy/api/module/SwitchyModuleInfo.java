@@ -17,6 +17,7 @@ import xyz.nucleoid.server.translations.api.Localization;
 import xyz.nucleoid.server.translations.api.LocalizationTarget;
 
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -75,15 +76,15 @@ public final class SwitchyModuleInfo {
 	 */
 	public static SwitchyModuleInfo fromNbt(NbtCompound nbt) {
 		return new SwitchyModuleInfo(
-			nbt.getBoolean(KEY_DEFAULT),
-			SwitchyModuleEditable.valueOf(nbt.getString(KEY_EDITABLE)),
-			TextCodecs.STRINGIFIED_CODEC.decode(NbtOps.INSTANCE, nbt.get(KEY_DESCRIPTION)).getOrThrow().getFirst().copy()
+			nbt.getBoolean(KEY_DEFAULT).orElse(false),
+			SwitchyModuleEditable.valueOf(nbt.getString(KEY_EDITABLE).get()),
+			TextCodecs.CODEC.decode(NbtOps.INSTANCE, nbt.get(KEY_DESCRIPTION)).getOrThrow().getFirst().copy()
 		)
-			.withDescriptionWhenEnabled(TextCodecs.STRINGIFIED_CODEC.decode(NbtOps.INSTANCE, nbt.get(KEY_WHEN_ENABLED)).getOrThrow().getFirst().copy())
-			.withDescriptionWhenDisabled(TextCodecs.STRINGIFIED_CODEC.decode(NbtOps.INSTANCE, nbt.get(KEY_WHEN_DISABLED)).getOrThrow().getFirst().copy())
-			.withApplyDependencies(nbt.getList(KEY_APPLY_DEPENDENCIES, NbtElement.STRING_TYPE).stream().map(NbtElement::asString).map(Identifier::tryParse).collect(Collectors.toSet()))
-			.withUniqueIds(nbt.getList(KEY_UNIQUE_IDS, NbtElement.STRING_TYPE).stream().map(NbtElement::asString).map(Identifier::tryParse).collect(Collectors.toSet()))
-			.withDeletionWarning(TextCodecs.STRINGIFIED_CODEC.decode(NbtOps.INSTANCE, nbt.get(KEY_DELETION_WARNING)).getOrThrow().getFirst().copy());
+			.withDescriptionWhenEnabled(TextCodecs.CODEC.decode(NbtOps.INSTANCE, nbt.get(KEY_WHEN_ENABLED)).getOrThrow().getFirst().copy())
+			.withDescriptionWhenDisabled(TextCodecs.CODEC.decode(NbtOps.INSTANCE, nbt.get(KEY_WHEN_DISABLED)).getOrThrow().getFirst().copy())
+			.withApplyDependencies(nbt.getList(KEY_APPLY_DEPENDENCIES).stream().map(NbtElement::asString).flatMap(Optional::stream).map(Identifier::tryParse).collect(Collectors.toSet()))
+			.withUniqueIds(nbt.getList(KEY_UNIQUE_IDS).stream().map(NbtElement::asString).flatMap(Optional::stream).map(Identifier::tryParse).collect(Collectors.toSet()))
+			.withDeletionWarning(TextCodecs.CODEC.decode(NbtOps.INSTANCE, nbt.get(KEY_DELETION_WARNING)).getOrThrow().getFirst().copy());
 	}
 
 	/**
@@ -96,10 +97,10 @@ public final class SwitchyModuleInfo {
 		NbtCompound nbt = new NbtCompound();
 		nbt.putBoolean(KEY_DEFAULT, isDefault);
 		nbt.putString(KEY_EDITABLE, editable.name());
-		nbt.put(KEY_DESCRIPTION, TextCodecs.STRINGIFIED_CODEC.encodeStart(NbtOps.INSTANCE, player == null ? description : Localization.text(description, LocalizationTarget.of(player))).result().orElseThrow());
-		nbt.put(KEY_WHEN_ENABLED, TextCodecs.STRINGIFIED_CODEC.encodeStart(NbtOps.INSTANCE, player == null ? descriptionWhenEnabled : Localization.text(descriptionWhenEnabled, LocalizationTarget.of(player))).result().orElseThrow());
-		nbt.put(KEY_WHEN_DISABLED, TextCodecs.STRINGIFIED_CODEC.encodeStart(NbtOps.INSTANCE, player == null ? descriptionWhenDisabled : Localization.text(descriptionWhenDisabled, LocalizationTarget.of(player))).result().orElseThrow());
-		nbt.put(KEY_DELETION_WARNING, TextCodecs.STRINGIFIED_CODEC.encodeStart(NbtOps.INSTANCE, player == null ? deletionWarning : Localization.text(deletionWarning, LocalizationTarget.of(player))).result().orElseThrow());
+		nbt.put(KEY_DESCRIPTION, TextCodecs.CODEC.encodeStart(NbtOps.INSTANCE, player == null ? description : Localization.text(description, LocalizationTarget.of(player))).result().orElseThrow());
+		nbt.put(KEY_WHEN_ENABLED, TextCodecs.CODEC.encodeStart(NbtOps.INSTANCE, player == null ? descriptionWhenEnabled : Localization.text(descriptionWhenEnabled, LocalizationTarget.of(player))).result().orElseThrow());
+		nbt.put(KEY_WHEN_DISABLED, TextCodecs.CODEC.encodeStart(NbtOps.INSTANCE, player == null ? descriptionWhenDisabled : Localization.text(descriptionWhenDisabled, LocalizationTarget.of(player))).result().orElseThrow());
+		nbt.put(KEY_DELETION_WARNING, TextCodecs.CODEC.encodeStart(NbtOps.INSTANCE, player == null ? deletionWarning : Localization.text(deletionWarning, LocalizationTarget.of(player))).result().orElseThrow());
 		NbtList nbtDependencies = new NbtList();
 		nbtDependencies.addAll(applyDependencies.stream().map(Identifier::toString).map(NbtString::of).toList());
 		nbt.put(KEY_APPLY_DEPENDENCIES, nbtDependencies);
