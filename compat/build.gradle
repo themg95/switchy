@@ -10,6 +10,7 @@ dependencies {
 	modCompileOnly libs.fabrication
 	modCompileOnly libs.placeholder
 	modCompileOnly libs.styledNicknames
+	modCompileOnly libs.playerPronouns
 	modCompileOnly libs.luaj
 	modCompileOnly libs.cardinal
 }

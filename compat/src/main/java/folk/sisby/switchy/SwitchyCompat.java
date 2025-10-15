@@ -3,6 +3,7 @@ package folk.sisby.switchy;
 import folk.sisby.switchy.api.SwitchyEvents;
 import folk.sisby.switchy.modules.FabricTailorModule;
 import folk.sisby.switchy.modules.FabricationArmorModule;
+import folk.sisby.switchy.modules.PlayerPronounsModule;
 import folk.sisby.switchy.modules.StyledNicknamesModule;
 import net.fabricmc.loader.api.FabricLoader;
 import org.slf4j.Logger;
@@ -31,6 +32,7 @@ public class SwitchyCompat implements SwitchyEvents.Init {
 		if (FabricLoader.getInstance().isModLoaded("styled-nicknames")) StyledNicknamesModule.register();
 		if (FabricLoader.getInstance().isModLoaded("fabrictailor")) FabricTailorModule.register();
 		if (FabricLoader.getInstance().isModLoaded("fabrication")) FabricationArmorModule.register();
+		if (FabricLoader.getInstance().isModLoaded("playerpronouns")) PlayerPronounsModule.register();
 		LOGGER.info("[Switchy Compat] Initialized!");
 	}
 }

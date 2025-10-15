@@ -19,6 +19,7 @@ cardinal = "6.3.1"
 fabrictailor = "2.6.6"
 fabrication = "3.4.9+1.20.4"
 styledNicknames = "1.8.0+1.21.5"
+playerPronouns = "2.3.0+1.21.4"
 placeholder = "2.6.4+1.21.5"
 playerData = "0.7.0+1.21.5"
 luaj = "3.0.8-figura"
@@ -45,6 +46,7 @@ cardinal = { group = "org.ladysnake.cardinal-components-api", name = "cardinal-c
 fabrictailor = { group = "maven.modrinth", name = "fabrictailor", version.ref = "fabrictailor" }
 fabrication = { group = "maven.modrinth", name = "fabrication", version.ref = "fabrication" }
 styledNicknames = { group = "maven.modrinth", name = "styled-nicknames", version.ref = "styledNicknames" }
+playerPronouns = { group = "maven.modrinth", name = "player-pronouns", version.ref = "playerPronouns" }
 placeholder = { group = "eu.pb4", name = "placeholder-api", version.ref = "placeholder" }
 playerData = { group = "eu.pb4", name = "player-data-api", version.ref = "playerData" }
 luaj = { group = "com.github.FiguraMC.luaj", name = "luaj-core", version.ref = "luaj" }
